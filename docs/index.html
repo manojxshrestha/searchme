@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Dorks for Bug Bounty Hunters</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --background-color: #0a0a0a;
+            --surface-color: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-color: #69f0ae;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, var(--background-color) 0%, #1a1a2e 100%);
+            color: var(--text-color);
+            padding: 20px;
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-size: 1.125rem;
+        }
+        #intro {
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #intro h1 {
+            font-size: 3em;
+            margin: 0 0 20px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-align: center;
+        }
+        #intro img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px auto;
+        }
+        #intro blockquote {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--accent-color);
+            padding: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #ccc;
+        }
+        #intro hr {
+            border: none;
+            height: 1px;
+            background: var(--border-color);
+            margin: 40px 0;
+        }
+        #intro h2 {
+            font-size: 1.8em;
+            color: var(--accent-color);
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        #intro ul, #intro ol {
+            padding-left: 20px;
+        }
+        #intro li {
+            margin-bottom: 10px;
+        }
+        .search-container {
+            margin: 40px 0;
+            text-align: center;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+        .search-input-group {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #888;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            font-size: 1.1em;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(105, 240, 174, 0.3);
+        }
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 1.2em;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #ccc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            z-index: 1000;
+            max-width: 300px;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .search-input-group:hover .tooltip,
+        .search-input-group:focus-within .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .social-links {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            color: #888;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .social-links a:hover {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            background: rgba(105, 240, 174, 0.1);
+            transform: translateY(-2px);
+        }
+        .social-links img {
+            height: 20px;
+        }
+        #dorkList {
+            margin: 40px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .category {
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out both;
+            text-align: center;
+        }
+        .category:nth-child(even) { animation-delay: 0.1s; }
+        .category:nth-child(odd) { animation-delay: 0.2s; }
+        .category-header {
+            font-size: 1.5em;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(105, 240, 174, 0.1);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            text-align: center;
+            justify-content: center;
+            max-width: 90%;
+            margin: 0 auto 20px;
+        }
+        .category-header small {
+            color: #888;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .dork-item {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: 10px auto;
+            transition: all 0.3s ease;
+            background: var(--surface-color);
+            position: relative;
+            overflow: hidden;
+            display: block;
+            width: fit-content;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+        .dork-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        .dork-item:hover {
+            transform: translateX(5px) scale(1.01);
+            border-color: var(--accent-color);
+            box-shadow: 0 5px 20px rgba(105, 240, 174, 0.2);
+        }
+        .dork-item:hover::before {
+            transform: scaleY(1);
+        }
+        .dork-description {
+            color: #888;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .dork-link {
+            text-decoration: none;
+            color: var(--text-color);
+            font-family: "SF Mono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 1.05em;
+            word-break: break-all;
+            display: block;
+            transition: color 0.2s ease;
+            cursor: pointer;
+            line-height: 1.4;
+            text-align: left;
+        }
+        .dork-link:hover {
+            color: var(--accent-color);
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75em;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .dork-item:hover .copy-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .copy-btn:hover {
+            background: var(--accent-color);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            border-top: 1px solid var(--border-color);
+            color: #888;
+            font-size: 0.9em;
+        }
+        .disclaimer {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: var(--error-color);
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            #intro h1 { font-size: 2.2em; }
+            .social-links { flex-direction: column; align-items: center; }
+            .dork-item { padding: 10px 12px; max-width: 95%; }
+            input { padding-left: 40px; }
+            .category-header { font-size: 1.3em; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="social-links">
+        <a href="https://twitter.com/manojxshrestha" target="_blank" rel="noopener">
+            <img src="https://img.shields.io/twitter/url/https/twitter.com/manojxshrestha.svg?style=social&label=Follow%20%40manojxshrestha" alt="X Follow Badge">
+        </a>
+        <a href="https://github.com/manojxshrestha/searchme/" target="_blank" rel="noopener">
+            <i class="fab fa-github"></i> GitHub Repo
+        </a>
+    </div>
+
+    <div class="search-container">
+        <label for="domainInput"><i class="fas fa-globe"></i> Enter Domain(s):</label>
+        <div class="search-input-group">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="domainInput" placeholder="example.com (or comma-separated: site1.com, site2.com)" oninput="updateDomain()">
+            <div class="tooltip">Pro Tip: Use commas for multi-domain searches. e.g., example1.com, example2.com</div>
+        </div>
+    </div>
+
+    <div id="intro"></div>
+
+    <ul id="dorkList">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading dorks... <i class="fas fa-cog fa-spin"></i></p>
+        </div>
+    </ul>
+
+    <footer class="footer">
+        <p>&copy; 2025 manojxshrestha | Built with ❤️ for the bug bounty community | <a href="#top" style="color: var(--accent-color);">Back to Top</a></p>
+    </footer>
+
+    <script>
+        const domainInput = document.getElementById('domainInput');
+        let originalDorks = [];
+        let categories = {};
+
+        async function fetchDorks() {
+            try {
+                const url = "https://raw.githubusercontent.com/manojxshrestha/searchme/main/README.md";
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch README');
+                const fullText = await response.text();
+                parseDorks(fullText);
+            } catch (error) {
+                document.querySelector('.loading').innerHTML = `<p style="color: var(--error-color);">Error loading dorks: ${error.message} <i class="fas fa-exclamation-triangle"></i></p>`;
+            }
+        }
+
+        function parseDorks(fullText) {
+            // Find the start of dork sections
+            const dorksStart = fullText.search(/##\s+CRITICAL DORKS\s*-/);
+            if (dorksStart === -1) throw new Error('Dork sections not found');
+            
+            // Render intro
+            const introText = fullText.substring(0, dorksStart).trim();
+            const introDiv = document.getElementById('intro');
+            introDiv.innerHTML = marked.parse(introText);
+            introDiv.querySelectorAll('img').forEach(img => {
+                img.style.display = 'inline-block';
+                img.style.margin = '5px';
+            });
+
+            // Parse dork sections
+            const dorksText = fullText.substring(dorksStart);
+            const sections = dorksText.split(/^## /gm).slice(1); // Skip empty first
+
+            const dorkList = document.getElementById("dorkList");
+            sections.forEach((section, index) => {
+                const titleMatch = section.match(/^([^\n]+)/);
+                const title = titleMatch ? titleMatch[1].trim() : `Category ${index}`;
+                
+                const descMatch = section.match(/\*\(([^)]+)\)\*/);
+                const desc = descMatch ? descMatch[1].trim() : '';
+
+                // Extract code blocks
+                const codeRegex = /```(?:\s*\n)?((?:.|\n)*?)```(?:\s*\n)?/gs;
+                let match;
+                let dorks = [];
+                while ((match = codeRegex.exec(section)) !== null) {
+                    const dork = match[1].trim();
+                    if (dork) {
+                        dorks.push(dork);
+                        originalDorks.push(dork);
+                    }
+                }
+
+                if (dorks.length > 0) {
+                    categories[title] = { dorks, desc };
+                }
+            });
+
+            renderCategories();
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        function renderCategories() {
+            const dorkList = document.getElementById("dorkList");
+            Object.entries(categories).forEach(([title, { dorks, desc }], index) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                categoryDiv.style.animationDelay = `${index * 0.1}s`;
+
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `<i class="fas fa-folder-open"></i> ${title} ${desc ? `<small>${desc}</small>` : ''}`;
+                categoryDiv.appendChild(header);
+
+                dorks.forEach((dork, dorkIndex) => {
+                    const globalIndex = originalDorks.indexOf(dork); // To match for update
+                    const item = createDorkItem(dork, title, globalIndex);
+                    categoryDiv.appendChild(item);
+                });
+
+                dorkList.appendChild(categoryDiv);
+            });
+        }
+
+        function createDorkItem(dork, category, index) {
+            const div = document.createElement('div');
+            div.className = 'dork-item';
+            div.innerHTML = `
+                <p class="dork-description">${category}</p>
+                <a href="#" class="dork-link" data-dork="${index}" data-original="${encodeURIComponent(dork)}">${dork}</a>
+                <button class="copy-btn" onclick="copyDork(event, '${index}')">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            `;
+            div.querySelector('.dork-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                const original = decodeURIComponent(div.querySelector('.dork-link').dataset.original);
+                const updated = updateDorkForDomains(original);
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(updated)}`, '_blank');
+            });
+            return div;
+        }
+
+        function copyDork(event, index) {
+            const dork = updateDorkForDomains(originalDorks[index]);
+            navigator.clipboard.writeText(dork).then(() => {
+                const btn = event.target.closest('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.style.background = '#4caf50';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = dork;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            });
+        }
+
+        function updateDorkForDomains(dork) {
+            const domains = domainInput.value.split(',').map(d => d.trim()).filter(Boolean);
+            if (domains.length === 0) return dork;
+
+            let updated = dork;
+            const joinedSites = domains.map(d => `site:${d}`).join(' OR ');
+            const joinedQuotes = domains.map(d => `"${d}"`).join(' OR ');
+
+            // Replace site:example.com patterns (handle variations like site:*.example.com)
+            updated = updated.replace(/site:(?:\*?\.)?example\.com/gi, joinedSites.replace(/ OR /g, ' OR site:(?:*.)?'));
+
+            // Replace "example.com"
+            updated = updated.replace(/"example\.com"/gi, joinedQuotes);
+
+            // Handle intext:"example.com"
+            updated = updated.replace(/intext:"example\.com"/gi, domains.map(d => `intext:"${d}"`).join(' OR '));
+
+            // Special cases: skip modification for certain dorks (e.g., Drupal specific, general queries)
+            if (dork.includes('Drupal') || dork.includes('powered by bugcrowd') || !dork.includes('example.com')) {
+                return dork;
+            }
+
+            return updated;
+        }
+
+        function updateDomain() {
+            document.querySelectorAll('.dork-link').forEach(link => {
+                const index = parseInt(link.dataset.dork);
+                const original = decodeURIComponent(link.dataset.original);
+                const updated = updateDorkForDomains(original);
+                link.textContent = updated.length > 200 ? updated.substring(0, 200) + '...' : updated;
+                link.title = updated; // Full dork in tooltip
+                link.href = `https://www.google.com/search?q=${encodeURIComponent(updated)}`;
+            });
+        }
+
+        fetchDorks();
+    </script>
+</body>
+</html>
